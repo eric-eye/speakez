@@ -1,23 +1,33 @@
-import adapter from 'webrtc-adapter';
+import adapter from "webrtc-adapter";
+
+function getElementById<T>(id: string): T {
+  return document.getElementById(id) as T;
+}
+
+const go = () => {
+  const channelName = getElementById<HTMLInputElement>("channel-name").value;
+
+  location.href = `/channels/${channelName}`;
+};
 
 const connect = async () => {
-  const connections: {[key: number]: RTCPeerConnection} = {};
+  const channelName = window.location.pathname.replace(/^.*\//, "");
+
+  const connections: { [key: number]: RTCPeerConnection } = {};
 
   const webcamStream = await navigator.mediaDevices.getUserMedia({
     audio: true,
     video: true,
   });
 
-  (document.getElementById("local_video") as HTMLVideoElement).srcObject = webcamStream;
+  getElementById<HTMLVideoElement>("local_video").srcObject = webcamStream;
 
   const serverUrl = window.location.origin.replace("http", "ws");
   const connection = new WebSocket(serverUrl, "json");
 
   const getNewConnection = (localId: number, remoteId: number) => {
     const peerConnection = new RTCPeerConnection({
-      iceServers: [
-        {urls: "stun:stun.l.google.com:19302"}
-      ]
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
     peerConnection.ontrack = (event) => {
@@ -28,42 +38,50 @@ const connect = async () => {
       newVideo.srcObject = event.streams[0];
       newVideo.id = `client_${remoteId}`;
 
-      (document.getElementById("remotes") as HTMLDivElement).appendChild(newVideo);
-    }
+      getElementById<HTMLDivElement>("remotes").appendChild(newVideo);
+    };
 
     peerConnection.onicecandidate = (event) => {
-      connection.send(JSON.stringify({
-        type: "new-ice-candidate",
-        candidate: event.candidate,
-        localId,
-        remoteId,
-      }))
-    }
-    webcamStream.getTracks().forEach(track => {
+      connection.send(
+        JSON.stringify({
+          type: "new-ice-candidate",
+          candidate: event.candidate,
+          localId,
+          remoteId,
+        })
+      );
+    };
+    webcamStream.getTracks().forEach((track) => {
       peerConnection.addTrack(track, webcamStream);
-    })
+    });
 
     return peerConnection;
-  }
+  };
 
   connection.onmessage = async (event) => {
     const message = JSON.parse(event.data);
 
     const sendOffer = async (peerClientId: number) => {
       const peerConnection = getNewConnection(message.clientId, peerClientId);
-      await peerConnection.setLocalDescription(await peerConnection.createOffer());
+      await peerConnection.setLocalDescription(
+        await peerConnection.createOffer()
+      );
       connections[peerClientId] = peerConnection;
 
-      connection.send(JSON.stringify({
-        type: "video-offer",
-        sdp: peerConnection.localDescription,
-        offeringClientId: message.clientId,
-        answeringClientId: peerClientId,
-      }))
-    }
+      connection.send(
+        JSON.stringify({
+          type: "video-offer",
+          sdp: peerConnection.localDescription,
+          offeringClientId: message.clientId,
+          answeringClientId: peerClientId,
+        })
+      );
+    };
 
     if (message.type == "id") {
-      const promises = message.clientIds.filter((clientId: number) => clientId != message.clientId).map((clientId: number) => sendOffer(clientId));
+      const promises = message.clientIds
+        .filter((clientId: number) => clientId != message.clientId)
+        .map((clientId: number) => sendOffer(clientId));
       await Promise.all(promises);
     }
 
@@ -71,22 +89,29 @@ const connect = async () => {
       const peerConnection = connections[message.clientId];
       peerConnection.close();
       delete connections[message.clientId];
-      (document.getElementById(`client_${message.clientId}`) as HTMLVideoElement).remove();
+      getElementById<HTMLVideoElement>(`client_${message.clientId}`).remove();
     }
 
     if (message.type == "video-offer") {
-      const peerConnection = getNewConnection(message.answeringClientId, message.offeringClientId);
+      const peerConnection = getNewConnection(
+        message.answeringClientId,
+        message.offeringClientId
+      );
       connections[message.offeringClientId] = peerConnection;
       const rtcSessionDescription = new RTCSessionDescription(message.sdp);
       await peerConnection.setRemoteDescription(rtcSessionDescription);
-      await peerConnection.setLocalDescription(await peerConnection.createAnswer());
+      await peerConnection.setLocalDescription(
+        await peerConnection.createAnswer()
+      );
 
-      connection.send(JSON.stringify({
-        type: "video-answer",
-        sdp: peerConnection.localDescription,
-        offeringClientId: message.offeringClientId,
-        answeringClientId: message.answeringClientId,
-      }))
+      connection.send(
+        JSON.stringify({
+          type: "video-answer",
+          sdp: peerConnection.localDescription,
+          offeringClientId: message.offeringClientId,
+          answeringClientId: message.answeringClientId,
+        })
+      );
     }
 
     if (message.type == "video-answer") {
@@ -103,7 +128,7 @@ const connect = async () => {
         await peerConnection.addIceCandidate(message.candidate);
       }
     }
-  }
-}
+  };
+};
 
-export {connect};
+export { connect, go };

@@ -14,8 +14,14 @@
         }
     </style>
 </head>
-<body>
-<input type="text" id="channel-name"/>
-<button id="submit" onclick="client.go()">Go</button>
+<body onload="client.connect()">
+    <div>
+        Local:
+        <video id="local_video" autoplay muted></video>
+    </div>
+    <div>
+        Remotes:
+        <div id="remotes"></div>
+    </div>
 </body>
 </html>
