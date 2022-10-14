@@ -80,7 +80,7 @@ const connect = async () => {
       );
     };
 
-    if (message.type == "id") {
+    if (message.type == "welcome") {
       const promises = message.clientIds
         .filter((clientId: number) => clientId != message.clientId)
         .map((clientId: number) => sendOffer(clientId));

@@ -33,6 +33,7 @@ const wsServer = new WebSocketServer({
 wsServer.on("request", (request) => {
   const connection: Connection = request.accept("json", request.origin);
   let channelName: string;
+  let clientId: number;
 
   connection.sendUTF(
     JSON.stringify({
@@ -43,7 +44,9 @@ wsServer.on("request", (request) => {
   connection.on("message", (message: any) => {
     const decoded = JSON.parse(message.utf8Data);
 
-    console.log("Received message: ", message);
+    console.log(
+      `[${channelName}][${clientId}] Received: ${JSON.stringify(decoded)}`
+    );
 
     if (decoded.type == "join") {
       channelName = decoded.channelName;
@@ -54,6 +57,8 @@ wsServer.on("request", (request) => {
 
       channels[channelName]++;
 
+      clientId = channels[channelName];
+
       if (!connections[channelName]) {
         connections[channelName] = {};
       }
@@ -62,8 +67,8 @@ wsServer.on("request", (request) => {
 
       connection.sendUTF(
         JSON.stringify({
-          type: "id",
-          clientId: channels[channelName],
+          type: "welcome",
+          clientId,
           clientIds: Object.keys(connections[channelName]),
         })
       );
