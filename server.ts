@@ -34,6 +34,7 @@ wsServer.on("request", (request) => {
   const connection: Connection = request.accept("json", request.origin);
   let channelName: string;
   let clientId: number;
+  let peerConnections: Record<number, Connection>;
 
   connection.sendUTF(
     JSON.stringify({
@@ -63,21 +64,23 @@ wsServer.on("request", (request) => {
         connections[channelName] = {};
       }
 
-      connections[channelName][channels[channelName]] = connection;
+      peerConnections = connections[channelName];
+
+      peerConnections[clientId] = connection;
 
       connection.sendUTF(
         JSON.stringify({
           type: "welcome",
           clientId,
-          clientIds: Object.keys(connections[channelName]),
+          clientIds: Object.keys(peerConnections),
         })
       );
     }
 
     if (decoded.type == "video-offer") {
-      for (const clientId in connections[channelName]) {
+      for (const clientId in peerConnections) {
         if (clientId == decoded.answeringClientId) {
-          connections[channelName][clientId].sendUTF(
+          peerConnections[clientId].sendUTF(
             JSON.stringify({
               type: "video-offer",
               sdp: decoded.sdp,
@@ -90,9 +93,9 @@ wsServer.on("request", (request) => {
     }
 
     if (decoded.type == "video-answer") {
-      for (const clientId in connections[channelName]) {
+      for (const clientId in peerConnections) {
         if (clientId == decoded.offeringClientId) {
-          connections[channelName][clientId].sendUTF(
+          peerConnections[clientId].sendUTF(
             JSON.stringify({
               type: "video-answer",
               sdp: decoded.sdp,
@@ -105,9 +108,9 @@ wsServer.on("request", (request) => {
     }
 
     if (decoded.type == "new-ice-candidate") {
-      for (const clientId in connections[channelName]) {
+      for (const clientId in peerConnections) {
         if (clientId == decoded.remoteId) {
-          connections[channelName][clientId].sendUTF(
+          peerConnections[clientId].sendUTF(
             JSON.stringify({
               type: "new-ice-candidate",
               candidate: decoded.candidate,
@@ -123,15 +126,15 @@ wsServer.on("request", (request) => {
   connection.on("close", () => {
     let departedClientId;
 
-    for (const clientId in connections[channelName]) {
-      if (connections[channelName][clientId] == connection) {
+    for (const clientId in peerConnections) {
+      if (peerConnections[clientId] == connection) {
         departedClientId = clientId;
-        delete connections[channelName][clientId];
+        delete peerConnections[clientId];
       }
     }
 
-    for (const clientId in connections[channelName]) {
-      connections[channelName][clientId].sendUTF(
+    for (const clientId in peerConnections) {
+      peerConnections[clientId].sendUTF(
         JSON.stringify({
           type: "close",
           clientId: departedClientId,
