@@ -61,6 +61,8 @@ const connect = async () => {
   connection.onmessage = async (event) => {
     const message = JSON.parse(event.data);
 
+    console.log("Received message: ", message);
+
     const sendOffer = async (peerClientId: number) => {
       const peerConnection = getNewConnection(message.clientId, peerClientId);
       await peerConnection.setLocalDescription(
@@ -122,11 +124,18 @@ const connect = async () => {
 
     if (message.type == "new-ice-candidate") {
       if (message.candidate) {
-        console.log(connections);
-        console.log(message.localId);
         const peerConnection = connections[message.localId];
         await peerConnection.addIceCandidate(message.candidate);
       }
+    }
+
+    if (message.type == "handshake") {
+      connection.send(
+        JSON.stringify({
+          type: "join",
+          channelName,
+        })
+      );
     }
   };
 };

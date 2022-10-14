@@ -3,13 +3,15 @@ import express from "express";
 import { connection as Connection, server as WebSocketServer } from "websocket";
 
 let webServer: http.Server;
-const connections: { [clientId: number]: Connection } = {};
+const connections: Record<string, Record<number, Connection>> = {};
 
 const app = express();
 
 webServer = http.createServer({}, app);
 
 let nextClientId = 1;
+
+const channels: Record<string, number> = {};
 
 app.get("/", function (req, res) {
   res.sendFile(__dirname + "/index.html");
@@ -30,26 +32,47 @@ const wsServer = new WebSocketServer({
 
 wsServer.on("request", (request) => {
   const connection: Connection = request.accept("json", request.origin);
-
-  connections[nextClientId] = connection;
+  let channelName: string;
 
   connection.sendUTF(
     JSON.stringify({
-      type: "id",
-      clientId: nextClientId,
-      clientIds: Object.keys(connections),
+      type: "handshake",
     })
   );
-
-  nextClientId++;
 
   connection.on("message", (message: any) => {
     const decoded = JSON.parse(message.utf8Data);
 
+    console.log("Received message: ", message);
+
+    if (decoded.type == "join") {
+      channelName = decoded.channelName;
+
+      if (!channels[channelName]) {
+        channels[channelName] = 0;
+      }
+
+      channels[channelName]++;
+
+      if (!connections[channelName]) {
+        connections[channelName] = {};
+      }
+
+      connections[channelName][channels[channelName]] = connection;
+
+      connection.sendUTF(
+        JSON.stringify({
+          type: "id",
+          clientId: channels[channelName],
+          clientIds: Object.keys(connections[channelName]),
+        })
+      );
+    }
+
     if (decoded.type == "video-offer") {
-      for (const clientId in connections) {
+      for (const clientId in connections[channelName]) {
         if (clientId == decoded.answeringClientId) {
-          connections[clientId].sendUTF(
+          connections[channelName][clientId].sendUTF(
             JSON.stringify({
               type: "video-offer",
               sdp: decoded.sdp,
@@ -62,9 +85,9 @@ wsServer.on("request", (request) => {
     }
 
     if (decoded.type == "video-answer") {
-      for (const clientId in connections) {
+      for (const clientId in connections[channelName]) {
         if (clientId == decoded.offeringClientId) {
-          connections[clientId].sendUTF(
+          connections[channelName][clientId].sendUTF(
             JSON.stringify({
               type: "video-answer",
               sdp: decoded.sdp,
@@ -77,9 +100,9 @@ wsServer.on("request", (request) => {
     }
 
     if (decoded.type == "new-ice-candidate") {
-      for (const clientId in connections) {
+      for (const clientId in connections[channelName]) {
         if (clientId == decoded.remoteId) {
-          connections[clientId].sendUTF(
+          connections[channelName][clientId].sendUTF(
             JSON.stringify({
               type: "new-ice-candidate",
               candidate: decoded.candidate,
@@ -95,15 +118,15 @@ wsServer.on("request", (request) => {
   connection.on("close", () => {
     let departedClientId;
 
-    for (const clientId in connections) {
-      if (connections[clientId] == connection) {
+    for (const clientId in connections[channelName]) {
+      if (connections[channelName][clientId] == connection) {
         departedClientId = clientId;
-        delete connections[clientId];
+        delete connections[channelName][clientId];
       }
     }
 
-    for (const clientId in connections) {
-      connections[clientId].sendUTF(
+    for (const clientId in connections[channelName]) {
+      connections[channelName][clientId].sendUTF(
         JSON.stringify({
           type: "close",
           clientId: departedClientId,
