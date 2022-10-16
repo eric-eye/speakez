@@ -34,7 +34,19 @@ export interface CloseData {
   clientId: number;
 }
 
+export interface WelcomeData {
+  type: "welcome";
+  clientId: number;
+  clientIds: number[];
+}
+
+export interface HandshakeData {
+  type: "handshake";
+}
+
 export type MessageData =
+  | HandshakeData
+  | WelcomeData
   | CloseData
   | JoinData
   | VideoOfferData

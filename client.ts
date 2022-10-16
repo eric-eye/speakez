@@ -1,4 +1,5 @@
 import adapter from "webrtc-adapter";
+import { MessageData } from "./types";
 
 function getElementById<T>(id: string): T {
   return document.getElementById(id) as T;
@@ -8,6 +9,10 @@ const go = () => {
   const channelName = getElementById<HTMLInputElement>("channel-name").value;
 
   location.href = `/channels/${channelName}`;
+};
+
+const sendToServer = (connection: WebSocket, message: MessageData) => {
+  connection.send(JSON.stringify(message));
 };
 
 const connect = async () => {
@@ -42,14 +47,12 @@ const connect = async () => {
     };
 
     peerConnection.onicecandidate = (event) => {
-      connection.send(
-        JSON.stringify({
-          type: "new-ice-candidate",
-          candidate: event.candidate,
-          localId,
-          remoteId,
-        })
-      );
+      sendToServer(connection, {
+        type: "new-ice-candidate",
+        candidate: event.candidate as RTCIceCandidate,
+        localId,
+        remoteId,
+      });
     };
     webcamStream.getTracks().forEach((track) => {
       peerConnection.addTrack(track, webcamStream);
@@ -70,14 +73,12 @@ const connect = async () => {
       );
       connections[peerClientId] = peerConnection;
 
-      connection.send(
-        JSON.stringify({
-          type: "video-offer",
-          sdp: peerConnection.localDescription,
-          offeringClientId: message.clientId,
-          answeringClientId: peerClientId,
-        })
-      );
+      sendToServer(connection, {
+        type: "video-offer",
+        sdp: peerConnection.localDescription as RTCSessionDescription,
+        offeringClientId: message.clientId,
+        answeringClientId: peerClientId,
+      });
     };
 
     if (message.type == "welcome") {
@@ -106,14 +107,12 @@ const connect = async () => {
         await peerConnection.createAnswer()
       );
 
-      connection.send(
-        JSON.stringify({
-          type: "video-answer",
-          sdp: peerConnection.localDescription,
-          offeringClientId: message.offeringClientId,
-          answeringClientId: message.answeringClientId,
-        })
-      );
+      sendToServer(connection, {
+        type: "video-answer",
+        sdp: peerConnection.localDescription as RTCSessionDescription,
+        offeringClientId: message.offeringClientId,
+        answeringClientId: message.answeringClientId,
+      });
     }
 
     if (message.type == "video-answer") {
@@ -130,12 +129,10 @@ const connect = async () => {
     }
 
     if (message.type == "handshake") {
-      connection.send(
-        JSON.stringify({
-          type: "join",
-          channelName,
-        })
-      );
+      sendToServer(connection, {
+        type: "join",
+        channelName,
+      });
     }
   };
 };

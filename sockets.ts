@@ -27,15 +27,11 @@ const openConnection = (request: SocketRequest) => {
     return null;
   };
 
-  const broadcast = (socket: SocketConnection, message: MessageData) => {
+  const sendToClient = (socket: SocketConnection, message: MessageData) => {
     socket.sendUTF(JSON.stringify(message));
   };
 
-  connection.sendUTF(
-    JSON.stringify({
-      type: "handshake",
-    })
-  );
+  sendToClient(connection, { type: "handshake" });
 
   const handleJoin = (decoded: JoinData) => {
     channelName = decoded.channelName;
@@ -56,18 +52,16 @@ const openConnection = (request: SocketRequest) => {
 
     peerConnections[clientId] = connection;
 
-    connection.sendUTF(
-      JSON.stringify({
-        type: "welcome",
-        clientId,
-        clientIds: Object.keys(peerConnections),
-      })
-    );
+    sendToClient(connection, {
+      type: "welcome",
+      clientId,
+      clientIds: Object.keys(peerConnections).map(parseInt),
+    });
   };
 
   const handleVideoOffer = (decoded: VideoOfferData) => {
     const peer = getPeer(decoded.answeringClientId) as SocketConnection;
-    broadcast(peer, {
+    sendToClient(peer, {
       type: "video-offer",
       sdp: decoded.sdp,
       offeringClientId: decoded.offeringClientId,
@@ -77,7 +71,7 @@ const openConnection = (request: SocketRequest) => {
 
   const handleVideoAnswer = (decoded: VideoAnswerData) => {
     const peer = getPeer(decoded.offeringClientId) as SocketConnection;
-    broadcast(peer, {
+    sendToClient(peer, {
       type: "video-answer",
       sdp: decoded.sdp,
       offeringClientId: decoded.offeringClientId,
@@ -87,7 +81,7 @@ const openConnection = (request: SocketRequest) => {
 
   const handleNewIceCandidate = (decoded: NewIceCandidateData) => {
     const peer = getPeer(decoded.remoteId) as SocketConnection;
-    broadcast(peer, {
+    sendToClient(peer, {
       type: "new-ice-candidate",
       candidate: decoded.candidate,
       remoteId: decoded.remoteId,
@@ -96,7 +90,7 @@ const openConnection = (request: SocketRequest) => {
   };
 
   const handleUtf8Data = (utf8Data: string) => {
-    const decoded = JSON.parse(utf8Data);
+    const decoded: MessageData = JSON.parse(utf8Data);
 
     console.log(`[${channelName}][${clientId}] Received: ${utf8Data}`);
 
@@ -135,7 +129,7 @@ const openConnection = (request: SocketRequest) => {
     }
 
     for (const clientId in peerConnections) {
-      broadcast(peerConnections[clientId], {
+      sendToClient(peerConnections[clientId], {
         type: "close",
         clientId: parseInt(departedClientId as string),
       });
