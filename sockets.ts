@@ -1,5 +1,6 @@
 import {
   JoinData,
+  MessageData,
   NewIceCandidateData,
   SocketConnection,
   SocketRequest,
@@ -24,6 +25,10 @@ const openConnection = (request: SocketRequest) => {
     }
 
     return null;
+  };
+
+  const broadcast = (socket: SocketConnection, message: MessageData) => {
+    socket.sendUTF(JSON.stringify(message));
   };
 
   connection.sendUTF(
@@ -62,38 +67,32 @@ const openConnection = (request: SocketRequest) => {
 
   const handleVideoOffer = (decoded: VideoOfferData) => {
     const peer = getPeer(decoded.answeringClientId) as SocketConnection;
-    peer.sendUTF(
-      JSON.stringify({
-        type: "video-offer",
-        sdp: decoded.sdp,
-        offeringClientId: decoded.offeringClientId,
-        answeringClientId: decoded.answeringClientId,
-      })
-    );
+    broadcast(peer, {
+      type: "video-offer",
+      sdp: decoded.sdp,
+      offeringClientId: decoded.offeringClientId,
+      answeringClientId: decoded.answeringClientId,
+    });
   };
 
   const handleVideoAnswer = (decoded: VideoAnswerData) => {
     const peer = getPeer(decoded.offeringClientId) as SocketConnection;
-    peer.sendUTF(
-      JSON.stringify({
-        type: "video-answer",
-        sdp: decoded.sdp,
-        offeringClientId: decoded.offeringClientId,
-        answeringClientId: decoded.answeringClientId,
-      })
-    );
+    broadcast(peer, {
+      type: "video-answer",
+      sdp: decoded.sdp,
+      offeringClientId: decoded.offeringClientId,
+      answeringClientId: decoded.answeringClientId,
+    });
   };
 
   const handleNewIceCandidate = (decoded: NewIceCandidateData) => {
     const peer = getPeer(decoded.remoteId) as SocketConnection;
-    peer.sendUTF(
-      JSON.stringify({
-        type: "new-ice-candidate",
-        candidate: decoded.candidate,
-        remoteId: decoded.remoteId,
-        localId: decoded.localId,
-      })
-    );
+    broadcast(peer, {
+      type: "new-ice-candidate",
+      candidate: decoded.candidate,
+      remoteId: decoded.remoteId,
+      localId: decoded.localId,
+    });
   };
 
   const handleUtf8Data = (utf8Data: string) => {
@@ -136,12 +135,10 @@ const openConnection = (request: SocketRequest) => {
     }
 
     for (const clientId in peerConnections) {
-      peerConnections[clientId].sendUTF(
-        JSON.stringify({
-          type: "close",
-          clientId: departedClientId,
-        })
-      );
+      broadcast(peerConnections[clientId], {
+        type: "close",
+        clientId: parseInt(departedClientId as string),
+      });
     }
   });
 };

@@ -28,3 +28,15 @@ export interface NewIceCandidateData {
   localId: number;
   remoteId: number;
 }
+
+export interface CloseData {
+  type: "close";
+  clientId: number;
+}
+
+export type MessageData =
+  | CloseData
+  | JoinData
+  | VideoOfferData
+  | VideoAnswerData
+  | NewIceCandidateData;
