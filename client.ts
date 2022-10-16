@@ -1,5 +1,5 @@
 import adapter from "webrtc-adapter";
-import { MessageData } from "./types";
+import { CloseData, MessageData, VideoOfferData, WelcomeData } from "./types";
 
 function getElementById<T>(id: string): T {
   return document.getElementById(id) as T;
@@ -61,78 +61,91 @@ const connect = async () => {
     return peerConnection;
   };
 
+  const sendOffer = async (
+    offeringClientId: number,
+    answeringClientId: number
+  ) => {
+    const peerConnection = getNewConnection(
+      offeringClientId,
+      answeringClientId
+    );
+    await peerConnection.setLocalDescription(
+      await peerConnection.createOffer()
+    );
+    connections[answeringClientId] = peerConnection;
+
+    sendToServer(connection, {
+      type: "video-offer",
+      sdp: peerConnection.localDescription as RTCSessionDescription,
+      offeringClientId,
+      answeringClientId,
+    });
+  };
+
+  const handleWelcome = async (message: WelcomeData) => {
+    const promises = message.clientIds
+      .filter((clientId: number) => clientId != message.clientId)
+      .map((clientId: number) => sendOffer(message.clientId, clientId));
+    await Promise.all(promises);
+  };
+
+  const handleClose = (message: CloseData) => {
+    const peerConnection = connections[message.clientId];
+    peerConnection.close();
+    delete connections[message.clientId];
+    getElementById<HTMLVideoElement>(`client_${message.clientId}`).remove();
+  };
+
+  const handleVideoOffer = async (message: VideoOfferData) => {
+    const peerConnection = getNewConnection(
+      message.answeringClientId,
+      message.offeringClientId
+    );
+    connections[message.offeringClientId] = peerConnection;
+    const rtcSessionDescription = new RTCSessionDescription(message.sdp);
+    await peerConnection.setRemoteDescription(rtcSessionDescription);
+    await peerConnection.setLocalDescription(
+      await peerConnection.createAnswer()
+    );
+
+    sendToServer(connection, {
+      type: "video-answer",
+      sdp: peerConnection.localDescription as RTCSessionDescription,
+      offeringClientId: message.offeringClientId,
+      answeringClientId: message.answeringClientId,
+    });
+  };
+
   connection.onmessage = async (event) => {
-    const message = JSON.parse(event.data);
+    const message: MessageData = JSON.parse(event.data);
 
     console.log("Received message: ", message);
 
-    const sendOffer = async (peerClientId: number) => {
-      const peerConnection = getNewConnection(message.clientId, peerClientId);
-      await peerConnection.setLocalDescription(
-        await peerConnection.createOffer()
-      );
-      connections[peerClientId] = peerConnection;
-
-      sendToServer(connection, {
-        type: "video-offer",
-        sdp: peerConnection.localDescription as RTCSessionDescription,
-        offeringClientId: message.clientId,
-        answeringClientId: peerClientId,
-      });
-    };
-
-    if (message.type == "welcome") {
-      const promises = message.clientIds
-        .filter((clientId: number) => clientId != message.clientId)
-        .map((clientId: number) => sendOffer(clientId));
-      await Promise.all(promises);
-    }
-
-    if (message.type == "close") {
-      const peerConnection = connections[message.clientId];
-      peerConnection.close();
-      delete connections[message.clientId];
-      getElementById<HTMLVideoElement>(`client_${message.clientId}`).remove();
-    }
-
-    if (message.type == "video-offer") {
-      const peerConnection = getNewConnection(
-        message.answeringClientId,
-        message.offeringClientId
-      );
-      connections[message.offeringClientId] = peerConnection;
-      const rtcSessionDescription = new RTCSessionDescription(message.sdp);
-      await peerConnection.setRemoteDescription(rtcSessionDescription);
-      await peerConnection.setLocalDescription(
-        await peerConnection.createAnswer()
-      );
-
-      sendToServer(connection, {
-        type: "video-answer",
-        sdp: peerConnection.localDescription as RTCSessionDescription,
-        offeringClientId: message.offeringClientId,
-        answeringClientId: message.answeringClientId,
-      });
-    }
-
-    if (message.type == "video-answer") {
-      const peerConnection = connections[message.answeringClientId];
-      const rtcSessionDescription = new RTCSessionDescription(message.sdp);
-      await peerConnection.setRemoteDescription(rtcSessionDescription);
-    }
-
-    if (message.type == "new-ice-candidate") {
-      if (message.candidate) {
-        const peerConnection = connections[message.localId];
-        await peerConnection.addIceCandidate(message.candidate);
-      }
-    }
-
-    if (message.type == "handshake") {
-      sendToServer(connection, {
-        type: "join",
-        channelName,
-      });
+    switch (message.type) {
+      case "welcome":
+        await handleWelcome(message);
+        break;
+      case "close":
+        handleClose(message);
+        break;
+      case "video-offer":
+        await handleVideoOffer(message);
+        break;
+      case "video-answer":
+        const peerConnection = connections[message.answeringClientId];
+        const rtcSessionDescription = new RTCSessionDescription(message.sdp);
+        await peerConnection.setRemoteDescription(rtcSessionDescription);
+        break;
+      case "new-ice-candidate":
+        if (message.candidate) {
+          const peerConnection = connections[message.localId];
+          await peerConnection.addIceCandidate(message.candidate);
+        }
+      case "handshake":
+        sendToServer(connection, {
+          type: "join",
+          channelName,
+        });
     }
   };
 };
