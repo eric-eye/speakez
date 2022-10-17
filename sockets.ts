@@ -2,6 +2,7 @@ import {
   JoinData,
   MessageData,
   NewIceCandidateData,
+  PeerToPeer,
   SocketConnection,
   SocketRequest,
   VideoAnswerData,
@@ -59,21 +60,21 @@ const openConnection = (request: SocketRequest) => {
     });
   };
 
-  const forwardToClient = (recipientId: number, data: MessageData) => {
-    const peer = getPeer(recipientId) as SocketConnection;
+  const forwardToClient = (data: MessageData & PeerToPeer) => {
+    const peer = getPeer(data.recipientId) as SocketConnection;
     sendToClient(peer, data);
   };
 
   const handleVideoOffer = (data: VideoOfferData) => {
-    forwardToClient(data.recipientId, data);
+    forwardToClient(data);
   };
 
   const handleVideoAnswer = (data: VideoAnswerData) => {
-    forwardToClient(data.recipientId, data);
+    forwardToClient(data);
   };
 
   const handleNewIceCandidate = (data: NewIceCandidateData) => {
-    forwardToClient(data.recipientId, data);
+    forwardToClient(data);
   };
 
   const handleUtf8Data = (utf8Data: string) => {

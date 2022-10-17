@@ -8,7 +8,7 @@ export interface JoinData {
   channelName: string;
 }
 
-interface PeerToPeer {
+export interface PeerToPeer {
   senderId: number;
   recipientId: number;
 }
