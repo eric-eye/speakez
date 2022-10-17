@@ -1,5 +1,12 @@
 import adapter from "webrtc-adapter";
-import { CloseData, MessageData, VideoOfferData, WelcomeData } from "./types";
+import {
+  CloseData,
+  MessageData,
+  NewIceCandidateData,
+  VideoAnswerData,
+  VideoOfferData,
+  WelcomeData,
+} from "./types";
 
 function getElementById<T>(id: string): T {
   return document.getElementById(id) as T;
@@ -50,8 +57,8 @@ const connect = async () => {
       sendToServer(connection, {
         type: "new-ice-candidate",
         candidate: event.candidate as RTCIceCandidate,
-        localId,
-        remoteId,
+        senderId: localId,
+        recipientId: remoteId,
       });
     };
     webcamStream.getTracks().forEach((track) => {
@@ -61,24 +68,18 @@ const connect = async () => {
     return peerConnection;
   };
 
-  const sendOffer = async (
-    offeringClientId: number,
-    answeringClientId: number
-  ) => {
-    const peerConnection = getNewConnection(
-      offeringClientId,
-      answeringClientId
-    );
+  const sendOffer = async (senderId: number, recipientId: number) => {
+    const peerConnection = getNewConnection(senderId, recipientId);
     await peerConnection.setLocalDescription(
       await peerConnection.createOffer()
     );
-    connections[answeringClientId] = peerConnection;
+    connections[recipientId] = peerConnection;
 
     sendToServer(connection, {
       type: "video-offer",
       sdp: peerConnection.localDescription as RTCSessionDescription,
-      offeringClientId,
-      answeringClientId,
+      senderId,
+      recipientId,
     });
   };
 
@@ -98,10 +99,10 @@ const connect = async () => {
 
   const handleVideoOffer = async (message: VideoOfferData) => {
     const peerConnection = getNewConnection(
-      message.answeringClientId,
-      message.offeringClientId
+      message.recipientId,
+      message.senderId
     );
-    connections[message.offeringClientId] = peerConnection;
+    connections[message.senderId] = peerConnection;
     const rtcSessionDescription = new RTCSessionDescription(message.sdp);
     await peerConnection.setRemoteDescription(rtcSessionDescription);
     await peerConnection.setLocalDescription(
@@ -111,8 +112,28 @@ const connect = async () => {
     sendToServer(connection, {
       type: "video-answer",
       sdp: peerConnection.localDescription as RTCSessionDescription,
-      offeringClientId: message.offeringClientId,
-      answeringClientId: message.answeringClientId,
+      recipientId: message.senderId,
+      senderId: message.recipientId,
+    });
+  };
+
+  const handleVideoAnswer = async (message: VideoAnswerData) => {
+    const peerConnection = connections[message.senderId];
+    const rtcSessionDescription = new RTCSessionDescription(message.sdp);
+    await peerConnection.setRemoteDescription(rtcSessionDescription);
+  };
+
+  const handleNewIceCandidate = async (message: NewIceCandidateData) => {
+    if (message.candidate) {
+      const peerConnection = connections[message.senderId];
+      await peerConnection.addIceCandidate(message.candidate);
+    }
+  };
+
+  const handleHandshake = () => {
+    sendToServer(connection, {
+      type: "join",
+      channelName,
     });
   };
 
@@ -132,20 +153,14 @@ const connect = async () => {
         await handleVideoOffer(message);
         break;
       case "video-answer":
-        const peerConnection = connections[message.answeringClientId];
-        const rtcSessionDescription = new RTCSessionDescription(message.sdp);
-        await peerConnection.setRemoteDescription(rtcSessionDescription);
+        await handleVideoAnswer(message);
         break;
       case "new-ice-candidate":
-        if (message.candidate) {
-          const peerConnection = connections[message.localId];
-          await peerConnection.addIceCandidate(message.candidate);
-        }
+        await handleNewIceCandidate(message);
+        break;
       case "handshake":
-        sendToServer(connection, {
-          type: "join",
-          channelName,
-        });
+        handleHandshake();
+        break;
     }
   };
 };

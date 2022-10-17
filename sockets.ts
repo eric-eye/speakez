@@ -59,34 +59,21 @@ const openConnection = (request: SocketRequest) => {
     });
   };
 
-  const handleVideoOffer = (decoded: VideoOfferData) => {
-    const peer = getPeer(decoded.answeringClientId) as SocketConnection;
-    sendToClient(peer, {
-      type: "video-offer",
-      sdp: decoded.sdp,
-      offeringClientId: decoded.offeringClientId,
-      answeringClientId: decoded.answeringClientId,
-    });
+  const forwardToClient = (recipientId: number, data: MessageData) => {
+    const peer = getPeer(recipientId) as SocketConnection;
+    sendToClient(peer, data);
   };
 
-  const handleVideoAnswer = (decoded: VideoAnswerData) => {
-    const peer = getPeer(decoded.offeringClientId) as SocketConnection;
-    sendToClient(peer, {
-      type: "video-answer",
-      sdp: decoded.sdp,
-      offeringClientId: decoded.offeringClientId,
-      answeringClientId: decoded.answeringClientId,
-    });
+  const handleVideoOffer = (data: VideoOfferData) => {
+    forwardToClient(data.recipientId, data);
   };
 
-  const handleNewIceCandidate = (decoded: NewIceCandidateData) => {
-    const peer = getPeer(decoded.remoteId) as SocketConnection;
-    sendToClient(peer, {
-      type: "new-ice-candidate",
-      candidate: decoded.candidate,
-      remoteId: decoded.remoteId,
-      localId: decoded.localId,
-    });
+  const handleVideoAnswer = (data: VideoAnswerData) => {
+    forwardToClient(data.recipientId, data);
+  };
+
+  const handleNewIceCandidate = (data: NewIceCandidateData) => {
+    forwardToClient(data.recipientId, data);
   };
 
   const handleUtf8Data = (utf8Data: string) => {

@@ -8,25 +8,24 @@ export interface JoinData {
   channelName: string;
 }
 
-export interface VideoOfferData {
+interface PeerToPeer {
+  senderId: number;
+  recipientId: number;
+}
+
+export interface VideoOfferData extends PeerToPeer {
   type: "video-offer";
   sdp: RTCSessionDescription;
-  offeringClientId: number;
-  answeringClientId: number;
 }
 
-export interface VideoAnswerData {
+export interface VideoAnswerData extends PeerToPeer {
   type: "video-answer";
   sdp: RTCSessionDescription;
-  offeringClientId: number;
-  answeringClientId: number;
 }
 
-export interface NewIceCandidateData {
+export interface NewIceCandidateData extends PeerToPeer {
   type: "new-ice-candidate";
   candidate: RTCIceCandidate;
-  localId: number;
-  remoteId: number;
 }
 
 export interface CloseData {
