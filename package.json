@@ -8,8 +8,10 @@
     "start": "npx ts-node server.ts",
     "start:dev": "nodemon server.ts",
     "watch": "nodemon --exec \\\"webpack\\\" --watch client.ts --mode development",
-    "dev": "concurrently \"npm:start:dev\" \"npm:watch\"",
-    "build": "webpack --mode production"
+    "dev": "concurrently \"npm:start:dev\" \"npm:watch\" \"npm:tailwind:watch\"",
+    "build": "webpack --mode production && npm run tailwind",
+    "tailwind": "tailwindcss -i ./main.css -o ./dist/output.css",
+    "tailwind:watch": "tailwindcss -i ./main.css -o ./dist/output.css --watch"
   },
   "author": "",
   "license": "ISC",
@@ -29,6 +31,7 @@
   "devDependencies": {
     "concurrently": "^7.4.0",
     "nodemon": "^2.0.20",
+    "tailwindcss": "^3.1.8",
     "webpack-cli": "^4.10.0"
   }
 }
