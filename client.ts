@@ -19,6 +19,7 @@ const go = () => {
 };
 
 const sendToServer = (connection: WebSocket, message: MessageData) => {
+  console.log("Sent message: ", message);
   connection.send(JSON.stringify(message));
 };
 
@@ -49,6 +50,7 @@ const connect = async () => {
       newVideo.autoplay = true;
       newVideo.srcObject = event.streams[0];
       newVideo.id = `client_${remoteId}`;
+      newVideo.classList.add("w-1/4");
 
       getElementById<HTMLDivElement>("remotes").appendChild(newVideo);
     };

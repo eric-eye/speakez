@@ -2,18 +2,23 @@ import http from "http";
 import express from "express";
 import { server as WebSocketServer } from "websocket";
 import { openConnection } from "./sockets";
+import randomWords from "random-words";
 
 let webServer: http.Server;
 
 const app = express();
 
+app.set("view engine", "ejs");
+
 webServer = http.createServer({}, app);
 
 app.get("/", function (req, res) {
-  res.sendFile(__dirname + "/index.html");
+  res.render("index", {
+    channelName: randomWords({ exactly: 4, join: "-" }),
+  });
 });
 app.get("/channels/:name", function (req, res) {
-  res.sendFile(__dirname + "/chat.html");
+  res.render("chat");
 });
 app.use(express.static("dist"));
 const PORT = process.env.PORT || 3000;

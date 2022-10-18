@@ -56,7 +56,7 @@ const openConnection = (request: SocketRequest) => {
     sendToClient(connection, {
       type: "welcome",
       clientId,
-      clientIds: Object.keys(peerConnections).map(parseInt),
+      clientIds: Object.keys(peerConnections).map((x) => parseInt(x, 10)),
     });
   };
 

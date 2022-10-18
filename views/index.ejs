@@ -2,12 +2,12 @@
 <html class="h-full">
 <head>
     <script src="/bundle.js" type="application/javascript"></script>
-    <link rel="stylesheet" href="./output.css"/>
+    <link rel="stylesheet" href="/output.css"/>
 </head>
 <body class="bg-fuchsia-100 w-full h-full flex items-center">
 <main class="w-full text-center">
     <h1 class="text-4xl mb-8 text-fuchsia-600">Chat away.</h1>
-    <input type="text" id="channel-name" class="px-3 py-1 border border-transparent rounded-md bg-fuchsia-400 text-white text-lg w-1/4 text-center focus:outline-none"/>
+    <input type="text" id="channel-name" class="px-3 py-1 border border-transparent rounded-md bg-fuchsia-400 text-white text-lg w-1/4 text-center focus:outline-none" value="<%= channelName %>"/>
     <button id="submit" onclick="client.go()" class="px-5 py-1 border border-transparent rounded-md bg-fuchsia-400 text-white ml-3 text-lg">Go</button>
 </main>
 </body>
