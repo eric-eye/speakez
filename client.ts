@@ -46,13 +46,16 @@ const connect = async () => {
     peerConnection.ontrack = (event) => {
       if (event.track.kind != "video") return;
 
+      const newDiv: HTMLDivElement = document.createElement("div");
       const newVideo: HTMLVideoElement = document.createElement("video");
       newVideo.autoplay = true;
       newVideo.srcObject = event.streams[0];
-      newVideo.id = `client_${remoteId}`;
-      newVideo.classList.add("w-1/4");
+      newDiv.id = `client_${remoteId}`;
+      newDiv.classList.add("basis-1/6");
+      newDiv.classList.add("grow");
+      newDiv.appendChild(newVideo);
 
-      getElementById<HTMLDivElement>("remotes").appendChild(newVideo);
+      getElementById<HTMLDivElement>("remotes").appendChild(newDiv);
     };
 
     peerConnection.onicecandidate = (event) => {
