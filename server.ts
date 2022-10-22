@@ -14,7 +14,7 @@ webServer = http.createServer({}, app);
 
 app.get("/", function (req, res) {
   res.render("index", {
-    channelName: randomWords({ exactly: 4, join: "-" }),
+    channelName: randomWords({ exactly: 4, join: "-", maxLength: 8 }),
   });
 });
 app.get("/channels/:name", function (req, res) {

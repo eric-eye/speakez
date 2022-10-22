@@ -33,9 +33,7 @@ const connect = async () => {
     video: true,
   });
 
-  getElementById<HTMLSpanElement>(
-    "channel-name"
-  ).innerText = `Channel: ${channelName}`;
+  getElementById<HTMLSpanElement>("channel-name").innerText = channelName;
   getElementById<HTMLVideoElement>("local_video").srcObject = webcamStream;
   getElementById<HTMLButtonElement>("channel-copy").addEventListener(
     "click",
