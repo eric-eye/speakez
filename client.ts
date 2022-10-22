@@ -42,6 +42,53 @@ const connect = async () => {
     }
   );
 
+  let muted = false;
+  let videoTurnedOff = false;
+
+  const muteButton = getElementById<HTMLButtonElement>("mute-button");
+  const videoButton = getElementById<HTMLButtonElement>("video-button");
+
+  videoButton.addEventListener("click", () => {
+    const yourVideoIsOff =
+      getElementById<HTMLButtonElement>("your-video-is-off");
+
+    if (!videoTurnedOff) {
+      webcamStream.getVideoTracks().forEach((track) => {
+        track.enabled = false;
+      });
+      videoTurnedOff = !videoTurnedOff;
+      yourVideoIsOff.classList.remove("hidden");
+      videoButton.innerText = "Turn video on";
+    } else {
+      webcamStream.getVideoTracks().forEach((track) => {
+        track.enabled = true;
+      });
+      videoTurnedOff = !videoTurnedOff;
+      yourVideoIsOff.classList.add("hidden");
+      videoButton.innerText = "Turn video off";
+    }
+  });
+
+  muteButton.addEventListener("click", () => {
+    const youAreMuted = getElementById<HTMLButtonElement>("you-are-muted");
+
+    if (!muted) {
+      webcamStream.getAudioTracks().forEach((track) => {
+        track.enabled = false;
+      });
+      muted = !muted;
+      youAreMuted.classList.remove("hidden");
+      muteButton.innerText = "Unmute";
+    } else {
+      webcamStream.getAudioTracks().forEach((track) => {
+        track.enabled = true;
+      });
+      muted = !muted;
+      youAreMuted.classList.add("hidden");
+      muteButton.innerText = "Mute";
+    }
+  });
+
   const serverUrl = window.location.origin.replace("http", "ws");
   const connection = new WebSocket(serverUrl, "json");
 
