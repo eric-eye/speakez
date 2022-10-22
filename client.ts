@@ -33,7 +33,16 @@ const connect = async () => {
     video: true,
   });
 
+  getElementById<HTMLSpanElement>(
+    "channel-name"
+  ).innerText = `Channel: ${channelName}`;
   getElementById<HTMLVideoElement>("local_video").srcObject = webcamStream;
+  getElementById<HTMLButtonElement>("channel-copy").addEventListener(
+    "click",
+    async () => {
+      await navigator.clipboard.writeText(window.location.toString());
+    }
+  );
 
   const serverUrl = window.location.origin.replace("http", "ws");
   const connection = new WebSocket(serverUrl, "json");
@@ -195,5 +204,4 @@ const connect = async () => {
     }
   };
 };
-
 export { connect, go };
