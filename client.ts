@@ -50,6 +50,7 @@ const connect = async () => {
       const newVideo: HTMLVideoElement = document.createElement("video");
       newVideo.autoplay = true;
       newVideo.srcObject = event.streams[0];
+      newVideo.classList.add("m-auto");
       newDiv.id = `client_${remoteId}`;
       newDiv.classList.add("basis-1/6");
       newDiv.classList.add("grow");
