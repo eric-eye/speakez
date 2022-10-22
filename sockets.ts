@@ -11,6 +11,7 @@ import {
 
 const channels: Record<string, number> = {};
 const connections: Record<string, Record<number, SocketConnection>> = {};
+const MAX_OCCUPANCY_PER_CHANNEL = 2;
 
 const openConnection = (request: SocketRequest) => {
   const connection: SocketConnection = request.accept("json", request.origin);
@@ -50,6 +51,14 @@ const openConnection = (request: SocketRequest) => {
     }
 
     peerConnections = connections[channelName];
+
+    if (Object.keys(peerConnections).length >= MAX_OCCUPANCY_PER_CHANNEL) {
+      sendToClient(connection, {
+        type: "max-occupancy",
+      });
+
+      return;
+    }
 
     peerConnections[clientId] = connection;
 

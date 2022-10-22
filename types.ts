@@ -43,8 +43,13 @@ export interface HandshakeData {
   type: "handshake";
 }
 
+export interface MaxOccupancyData {
+  type: "max-occupancy";
+}
+
 export type MessageData =
   | HandshakeData
+  | MaxOccupancyData
   | WelcomeData
   | CloseData
   | JoinData

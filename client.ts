@@ -46,6 +46,9 @@ const connect = async () => {
     peerConnection.ontrack = (event) => {
       if (event.track.kind != "video") return;
 
+      const waiting = document.getElementById("waiting") as HTMLDivElement;
+      waiting.classList.add("hidden");
+
       const newDiv: HTMLDivElement = document.createElement("div");
       const newVideo: HTMLVideoElement = document.createElement("video");
       newVideo.autoplay = true;
@@ -90,10 +93,24 @@ const connect = async () => {
   };
 
   const handleWelcome = async (message: WelcomeData) => {
+    if (message.clientIds.length == 1) {
+      const waiting = document.getElementById("waiting") as HTMLDivElement;
+      waiting.classList.remove("hidden");
+    }
+
     const promises = message.clientIds
       .filter((clientId: number) => clientId != message.clientId)
       .map((clientId: number) => sendOffer(message.clientId, clientId));
     await Promise.all(promises);
+  };
+
+  const handleMaxOccupancy = () => {
+    const errorMessage: HTMLDivElement = document.getElementById(
+      "error"
+    ) as HTMLDivElement;
+    errorMessage.classList.remove("hidden");
+    errorMessage.innerText =
+      "This room already has the maximum number of occupants.";
   };
 
   const handleClose = (message: CloseData) => {
@@ -101,6 +118,11 @@ const connect = async () => {
     peerConnection.close();
     delete connections[message.clientId];
     getElementById<HTMLVideoElement>(`client_${message.clientId}`).remove();
+
+    if (Object.keys(connections).length < 1) {
+      const waiting = document.getElementById("waiting") as HTMLDivElement;
+      waiting.classList.remove("hidden");
+    }
   };
 
   const handleVideoOffer = async (message: VideoOfferData) => {
@@ -151,6 +173,9 @@ const connect = async () => {
     switch (message.type) {
       case "welcome":
         await handleWelcome(message);
+        break;
+      case "max-occupancy":
+        handleMaxOccupancy();
         break;
       case "close":
         handleClose(message);
