@@ -12,6 +12,15 @@ app.set("view engine", "ejs");
 
 webServer = http.createServer({}, app);
 
+app.set("trust proxy", true);
+
+app.use(function (request, response, next) {
+  if (process.env.NODE_ENV != "development" && !request.secure) {
+    return response.redirect("https://" + request.headers.host + request.url);
+  }
+
+  next();
+});
 app.use(express.static("dist"));
 app.get("/", function (req, res) {
   res.render("index", {

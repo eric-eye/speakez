@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npx ts-node server.ts",
-    "start:dev": "nodemon server.ts",
+    "start:dev": "NODE_ENV=development nodemon server.ts",
     "watch": "nodemon --exec \\\"webpack\\\" --watch client.ts --mode development",
     "dev": "concurrently \"npm:start:dev\" \"npm:watch\" \"npm:tailwind:watch\"",
     "build": "webpack --mode production && npm run tailwind",
