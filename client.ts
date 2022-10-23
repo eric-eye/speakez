@@ -97,32 +97,6 @@ const start = async () => {
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
       });
 
-      peerConnection.onicecandidateerror = () => {
-        console.log("ICE Candidate Error");
-      };
-
-      peerConnection.oniceconnectionstatechange = (args) => {
-        console.log("ICE Connection state change ", args);
-      };
-
-      peerConnection.onicegatheringstatechange = (args) => {
-        console.log("ICE Gathering state change ", args);
-      };
-
-      peerConnection.onconnectionstatechange = (args) => {
-        console.log("Connection state change ", args);
-      };
-
-      peerConnection.onnegotiationneeded = (args) => {
-        console.log("negotiation needed ", args);
-      };
-
-      peerConnection.onsignalingstatechange = (foo) => {
-        console.log("on signal state change", foo);
-        console.log("signaling state", peerConnection.signalingState);
-        // console.log(foo.)
-      };
-
       peerConnection.ontrack = (event) => {
         if (event.track.kind != "video") return;
 
@@ -134,6 +108,7 @@ const start = async () => {
         newVideo.autoplay = true;
         newVideo.srcObject = event.streams[0];
         newVideo.classList.add("m-auto");
+        newVideo.classList.add("drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]");
         newDiv.id = `client_${remoteId}`;
         newDiv.classList.add("basis-1/6");
         newDiv.classList.add("grow");
