@@ -1,24 +1,4 @@
 <%- include('header'); %>
-<main class="w-full text-center" id="home" hidden>
-    <h1 class="text-4xl mb-8">Start chatting</h1>
-    <input type="text" id="channel-name-input" class="px-3 py-1 border border-transparent rounded-md bg-white/25 text-lg w-1/4 text-center focus:outline-none" value="<%= channelName %>"/>
-    <button id="go" class="px-5 py-1 border border-transparent rounded-md bg-white/25 ml-3 text-lg hover:bg-white/50">Go</button>
-    <p class="mt-12">We provide simple 1:1 video chatting. No accounts, no time limit.</p>
-</main>
-<main class="w-full text-center h-full relative text-white" id="chat" hidden>
-    <div id="error" class="text-center hidden relative top-1/2"></div>
-    <div id="waiting" class="text-center hidden relative top-1/2">Waiting for other people to join...</div>
-    <div class="text-center absolute bottom-20 w-full">
-        <div id="you-are-muted" class="hidden">You are muted.</div>
-        <div id="your-video-is-off" class="hidden">Your video is off.</div>
-    </div>
-    <div id="remotes" class="flex h-full flex-wrap gap-1 mt-1"></div>
-    <div class="absolute w-1/6 bottom-0 right-0 pr-1 pb-1">
-        <video id="local_video" autoplay muted class="ml-auto mr-auto w-full h-full"></video>
-        <button id="mute-button">Mute</button> - <button id="video-button">Turn off video</button>
-    </div>
-    <div class="absolute bottom-2 left-2 bg-white/25 hover:cursor-pointer pt-2 pb-2 pl-4 pr-4" id="channel-copy">
-        <span id="channel-name-display"></span>&nbsp;🔗
-    </div>
-</main>
+<%- include('home'); %>
+<%- include('room'); %>
 <%- include('footer'); %>

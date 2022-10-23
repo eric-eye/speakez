@@ -12,17 +12,17 @@ app.set("view engine", "ejs");
 
 webServer = http.createServer({}, app);
 
+app.use(express.static("dist"));
 app.get("/", function (req, res) {
   res.render("index", {
-    channelName: randomWords({ exactly: 4, join: "-", maxLength: 8 }),
+    roomName: randomWords({ exactly: 4, join: "-", maxLength: 8 }),
   });
 });
-app.get("/channels/:name", function (req, res) {
+app.get("/:name", function (req, res) {
   res.render("index", {
-    channelName: "",
+    roomName: "",
   });
 });
-app.use(express.static("dist"));
 const PORT = process.env.PORT || 3000;
 webServer.listen(PORT, function () {
   console.log(`Server is listening on port ${PORT}`);
