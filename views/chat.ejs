@@ -1,11 +1,5 @@
-<!doctype html>
-<html class="h-full">
-<head>
-    <script src="/bundle.js" type="application/javascript"></script>
-    <link rel="stylesheet" href="/output.css"/>
-</head>
-<body class="bg-fuchsia-100 w-full h-full flex items-center" onload="client.connect()">
-<main class="w-full text-center h-full relative text-fuchsia-600">
+<%- include('header', { onload: "client.connect()"} ); %>
+<main class="w-full text-center h-full relative">
     <div id="error" class="text-center hidden relative top-1/2"></div>
     <div id="waiting" class="text-center hidden relative top-1/2">Waiting for other people to join...</div>
     <div class="text-center absolute bottom-20 w-full">
@@ -17,9 +11,8 @@
         <video id="local_video" autoplay muted class="ml-auto mr-auto w-full h-full"></video>
         <button id="mute-button">Mute</button> - <button id="video-button">Turn off video</button>
     </div>
-    <div class="absolute bottom-2 left-2 bg-white hover:cursor-pointer pt-2 pb-2 pl-4 pr-4" id="channel-copy">
+    <div class="absolute bottom-2 left-2 bg-white/25 hover:cursor-pointer pt-2 pb-2 pl-4 pr-4" id="channel-copy">
         <span id="channel-name"></span>&nbsp;🔗
     </div>
 </main>
-</body>
-</html>
+<%- include('footer'); %>
