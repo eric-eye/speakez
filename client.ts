@@ -108,7 +108,9 @@ const start = async () => {
         newVideo.autoplay = true;
         newVideo.srcObject = event.streams[0];
         newVideo.classList.add("m-auto");
-        newVideo.classList.add("drop-shadow-[0_5px_5px_rgba(0,0,0,0.5)]");
+        newVideo.classList.add("border-4");
+        newVideo.classList.add("border-black");
+        newVideo.classList.add("border-opacity-25");
         newDiv.id = `client_${remoteId}`;
         newDiv.classList.add("basis-1/6");
         newDiv.classList.add("grow");
