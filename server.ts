@@ -18,7 +18,9 @@ app.get("/", function (req, res) {
   });
 });
 app.get("/channels/:name", function (req, res) {
-  res.render("chat");
+  res.render("index", {
+    channelName: "",
+  });
 });
 app.use(express.static("dist"));
 const PORT = process.env.PORT || 3000;

@@ -12,10 +12,26 @@ function getElementById<T>(id: string): T {
   return document.getElementById(id) as T;
 }
 
-const go = () => {
-  const channelName = getElementById<HTMLInputElement>("channel-name").value;
+const start = async () => {
+  if (window.location.pathname === "" || window.location.pathname === "/") {
+    getElementById<HTMLDivElement>("home").removeAttribute("hidden");
+    getElementById<HTMLDivElement>("chat").setAttribute("hidden", "");
+    getElementById<HTMLButtonElement>("go").addEventListener("click", go);
+  } else if (window.location.pathname.match("^/channels/")) {
+    getElementById<HTMLDivElement>("home").setAttribute("hidden", "");
+    getElementById<HTMLDivElement>("chat").removeAttribute("hidden");
+    await connect();
+  }
+};
 
-  location.href = `/channels/${channelName}`;
+const go = async () => {
+  const channelName =
+    getElementById<HTMLInputElement>("channel-name-input").value;
+  history.pushState({}, "", `/channels/${channelName}`);
+  getElementById<HTMLDivElement>("home").setAttribute("hidden", "");
+  getElementById<HTMLDivElement>("chat").removeAttribute("hidden");
+
+  await connect();
 };
 
 const sendToServer = (connection: WebSocket, message: MessageData) => {
@@ -33,7 +49,8 @@ const connect = async () => {
     video: true,
   });
 
-  getElementById<HTMLSpanElement>("channel-name").innerText = channelName;
+  getElementById<HTMLSpanElement>("channel-name-display").innerText =
+    channelName;
   getElementById<HTMLVideoElement>("local_video").srcObject = webcamStream;
   getElementById<HTMLButtonElement>("channel-copy").addEventListener(
     "click",
@@ -249,4 +266,4 @@ const connect = async () => {
     }
   };
 };
-export { connect, go };
+export { start };
