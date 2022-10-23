@@ -49,39 +49,45 @@ const start = async () => {
     const yourVideoIsOff =
       getElementById<HTMLButtonElement>("your-video-is-off");
     const youAreMuted = getElementById<HTMLButtonElement>("you-are-muted");
+    const turnOnMicrophone =
+      getElementById<HTMLSpanElement>("turn-on-microphone");
+    const turnOnCamera = getElementById<HTMLSpanElement>("turn-on-camera");
 
-    videoButton.addEventListener("click", () => {
+    const toggleVideo = () => {
       videoTurnedOff = !videoTurnedOff;
 
       webcamStream.getVideoTracks().forEach((track) => {
         track.enabled = !videoTurnedOff;
       });
 
-      videoButton.innerText = videoTurnedOff
-        ? "Turn video on"
-        : "Turn video off";
+      videoButton.innerText = videoTurnedOff ? "Cam ⛔" : "Cam ✅";
 
       if (videoTurnedOff) {
         show(yourVideoIsOff);
       } else {
         hide(yourVideoIsOff);
       }
-    });
+    };
 
-    muteButton.addEventListener("click", () => {
+    const toggleMicrophone = () => {
       muted = !muted;
 
       webcamStream.getAudioTracks().forEach((track) => {
         track.enabled = !muted;
       });
-      muteButton.innerText = muted ? "Unmute" : "Mute";
+      muteButton.innerText = muted ? "Mic ⛔" : "Mic ✅";
 
       if (muted) {
         show(youAreMuted);
       } else {
         hide(youAreMuted);
       }
-    });
+    };
+
+    turnOnMicrophone.addEventListener("click", toggleMicrophone);
+    turnOnCamera.addEventListener("click", toggleVideo);
+    muteButton.addEventListener("click", toggleMicrophone);
+    videoButton.addEventListener("click", toggleVideo);
 
     const serverUrl = window.location.origin.replace("http", "ws");
     const connection = new WebSocket(serverUrl, "json");
