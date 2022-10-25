@@ -108,13 +108,14 @@ const start = async () => {
         newVideo.autoplay = true;
         newVideo.srcObject = event.streams[0];
         newVideo.classList.add("m-auto");
-        newVideo.classList.add("border-4");
-        newVideo.classList.add("border-black");
-        newVideo.classList.add("border-opacity-25");
+        newVideo.classList.add("w-full");
+        newVideo.classList.add("h-full");
+        newVideo.classList.add("drop-shadow-[2px_2px_5px_rgba(0,0,0,1)]");
         newDiv.id = `client_${remoteId}`;
-        newDiv.classList.add("basis-1/6");
-        newDiv.classList.add("grow");
         newDiv.appendChild(newVideo);
+        newDiv.classList.add("m-auto");
+        newDiv.classList.add("w-[80vw]");
+        newDiv.classList.add("h-[80vh]");
 
         getElementById<HTMLDivElement>("remotes").appendChild(newDiv);
       };
