@@ -265,8 +265,8 @@ const start = async () => {
 
   if (window.location.pathname === "" || window.location.pathname === "/") {
     renderHome();
-    const roomName = getElementById<HTMLInputElement>("room-name-input").value;
     getElementById<HTMLButtonElement>("go").addEventListener("click", () => {
+      const roomName = getElementById<HTMLInputElement>("room-name-input").value;
       history.pushState({}, "", `/${roomName}`);
       renderRoom(roomName);
     });
