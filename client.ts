@@ -32,7 +32,6 @@ const start = async () => {
       video: true,
     });
 
-    getElementById<HTMLSpanElement>("room-name-display").innerText = roomName;
     getElementById<HTMLVideoElement>("local_video").srcObject = webcamStream;
     getElementById<HTMLButtonElement>("room-copy").addEventListener(
       "click",
@@ -260,6 +259,7 @@ const start = async () => {
   const renderRoom = async (roomName: string) => {
     hide(homeView);
     show(roomView);
+    getElementById<HTMLSpanElement>("room-name-display").innerText = roomName;
     await connect(roomName);
   };
 
